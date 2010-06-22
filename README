@@ -1,0 +1,17 @@
+ObjDiffer's purpose is to lower the payload for the server.
+You can predefine one general set of values to be shared between every user.
+If a user then changes something only the changes are saved to his/her account.
+
+* Example
+- Initial visit: 
+
+var settings = new ObjDiffer(general_settings);
+settings.value.on_page_item_count = 5;
+var diff = settings.getDiff(); // {"on_page_item_count":5}
+save_to_server(diff);
+
+Next visits:
+
+var patch = load_from_server();
+var settings = new ObjDiffer(general_settings, patch);
+alert(settings.value.on_page_item_count); // 5

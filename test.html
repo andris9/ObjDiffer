@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <title>ObjDiffer</title>
+    
+    <script src="objdiffer.js"></script>
+    
+    <script>
+        var general_settings = {
+                "site_colors" : {
+                    "background": "white",
+                    "text": "black"
+                },
+                "site_title": "My awesome site, powered by ObjDiffer"
+            },
+            local_settings = new ObjDiffer(general_settings);
+        
+        
+        setValues = function(){
+            document.getElementById("title").value = local_settings.value.site_title;
+            document.getElementById("bgcol").value = local_settings.value.site_colors.background;
+            document.getElementById("txtcol").value = local_settings.value.site_colors.text;
+        }
+        
+        window.onload = setValues;
+        
+        getDiff = function(){
+            local_settings.value.site_title = document.getElementById("title").value;
+            local_settings.value.site_colors.background = document.getElementById("bgcol").value;
+            local_settings.value.site_colors.text = document.getElementById("txtcol").value;
+            
+            // use "custom built serializer"
+            
+            var diff = local_settings.getDiff(),
+                tree = [],
+                walk = function(obj, prefix){
+                    for(var i in obj){
+                        if(obj.hasOwnProperty(i)){
+                            if(typeof obj[i]=="object" && obj[i]!==null)
+                                walk(obj[i], prefix?prefix+"."+i:i);
+                            else
+                                tree.push((prefix?prefix+"."+i:i)+"="+obj[i]);
+                        }
+                    }
+                };
+            walk(diff);
+            
+            if(tree.length)
+                alert(tree.join("\n"));
+            else
+                alert("no changes");
+        }
+        
+        restore = function(){
+            local_settings = new ObjDiffer(general_settings);
+            setValues();
+        }
+        
+        apply = function(){
+            var patch = {
+                "site_title": "My extremely aewsome site",
+                "site_colors":{
+                    "text": "red"
+                }
+            }
+            local_settings = new ObjDiffer(general_settings, patch);
+            setValues();
+        }
+        
+    </script>
+    
+     
+  </head>
+  <body>
+  
+    <h3>ObjDiffer test</h3>
+    
+    <p>ObjDiffer's purpose is to lower the payload for the server. You can predefine one general set of values to be shared between every user. If a user then changes something only the changes are saved to his/her account.</p>
+    
+    <table>
+        <tr>
+            <th colspan="2">General settings</th>
+        </tr>
+        <tr>
+            <td>Site title:</td>
+            <td><input type="text" name="title" id="title" value="" style="width:300px" /></td>
+        </tr>
+        <tr>
+            <th colspan="2">Colors</th>
+        </tr>
+        <tr>
+            <td>Background:</td>
+            <td><input type="text" name="bgcol" id="bgcol" value="" style="width:300px"  /></td>
+        </tr>
+        <tr>
+            <td>Text:</td>
+            <td><input type="text" name="txtcol" id="txtcol" value="" style="width:300px"  /></td>
+        </tr>
+    </table>
+    
+    <p>
+        <a href="javascript:void(0);" onclick="apply()">apply predefined patch</a> |
+        <a href="javascript:void(0);" onclick="restore()">restore original</a>
+    </p>
+    <p>
+        <a href="javascript:void(0);" onclick="getDiff()">click here to see the diff</a>
+    </p>
+    
+    <p>If you apply the "patch" (changes title and the text color values) or edit the values by yourself, you can generate a diff value based on the differences between the current and the original values. You can save the diff in some kind of serialized form (ie. JSON) and later reapply the saved changes to the original values.</p>
+    <p> * Example</p>
+    <p>- Initial visit:</p> 
+
+<pre>var settings = new ObjDiffer(general_settings);
+settings.value.on_page_item_count = 5;
+var diff = settings.getDiff(); // {"on_page_item_count":5}
+save_to_server(diff);</pre>
+
+    <p>Next visits:</p>
+
+<pre>var patch = load_from_server();
+var settings = new ObjDiffer(general_settings, patch);
+alert(settings.value.on_page_item_count); // 5</pre>
+    
+  </body>
+</html>
